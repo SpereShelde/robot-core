@@ -99,7 +99,10 @@ while True:
     Disk = subprocess.check_output(cmd, shell = True )
 
     cmd = "hostname -I | cut -d\' \' -f1"
-    IP = subprocess.check_output(cmd, shell = True )
+    IP1 = subprocess.check_output(cmd, shell = True )
+    
+    cmd = "hostname -I | cut -d\' \' -f2"
+    IP2 = subprocess.check_output(cmd, shell = True )
 
     # Write two lines of text.
 
@@ -107,7 +110,8 @@ while True:
     #draw.text((x+56, top), str(CPU_TEMP), font=font, fill=255)
     draw.text((x, top+8), str(MemUsage)[2:-1],  font=font, fill=255)
     #draw.text((x, top+16), str(Disk),  font=font, fill=255)
-    draw.text((x, top+24), str(IP)[2:-3],  font=font, fill=255)
+    draw.text((x, top+16), str(IP1)[2:-3],  font=font, fill=255)
+    draw.text((x, top+24), str(IP2)[2:-3],  font=font, fill=255)
 
     # Display image.
     disp.image(image)
