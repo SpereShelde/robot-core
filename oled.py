@@ -18,38 +18,43 @@ fan_reg = 0x08
 # Raspberry Pi pin configuration:
 RST = None     # on the PiOLED this pin isnt used
 
-# 128x32 display with hardware I2C:
-disp = Adafruit_SSD1306.SSD1306_128_32(rst=RST)
+try:
+    # 128x32 display with hardware I2C:
+    disp = Adafruit_SSD1306.SSD1306_128_32(rst=RST)
 
-# Initialize library.
-disp.begin()
+    # Initialize library.
+    disp.begin()
 
-# Clear display.
-disp.clear()
-disp.display()
+    # Clear display.
+    disp.clear()
+    disp.display()
 
-# Create blank image for drawing.
-# Make sure to create image with mode '1' for 1-bit color.
-width = disp.width
-height = disp.height
-image = Image.new('1', (width, height))
+    # Create blank image for drawing.
+    # Make sure to create image with mode '1' for 1-bit color.
+    width = disp.width
+    height = disp.height
+    image = Image.new('1', (width, height))
 
-# Get drawing object to draw on image.
-draw = ImageDraw.Draw(image)
+    # Get drawing object to draw on image.
+    draw = ImageDraw.Draw(image)
 
-# Draw a black filled box to clear the image.
-draw.rectangle((0,0,width,height), outline=0, fill=0)
+    # Draw a black filled box to clear the image.
+    draw.rectangle((0,0,width,height), outline=0, fill=0)
 
-# Draw some shapes.
-# First define some constants to allow easy resizing of shapes.
-padding = -2
-top = padding
-bottom = height-padding
-# Move left to right keeping track of the current x position for drawing shapes.
-x = 0
+    # Draw some shapes.
+    # First define some constants to allow easy resizing of shapes.
+    padding = -2
+    top = padding
+    bottom = height-padding
+    # Move left to right keeping track of the current x position for drawing shapes.
+    x = 0
 
-# Load default font.
-font = ImageFont.load_default()
+    # Load default font.
+    font = ImageFont.load_default()
+except:
+    print("No display")
+finally:
+    print("CTRL-C and keep going.")
 
 def getCPULoadRate():
     f1 = os.popen("cat /proc/stat", 'r')
@@ -80,41 +85,45 @@ def getCPULoadRate():
 
 
 while True:
-    # Draw a black filled box to clear the image.
-    draw.rectangle((0,0,width,height), outline=0, fill=0)
+    try:
+        # Draw a black filled box to clear the image.
+        draw.rectangle((0,0,width,height), outline=0, fill=0)
 
-    # Shell scripts for system monitoring from here : https://unix.stackexchange.com/questions/119126/command-to-display-memory-usage-disk-usage-and-cpu-load
-    
-    # cmd = "top -bn1 | grep load | awk '{printf \"CPU:%.0f%%\", $(NF-2)*100}'"
-    # CPU = subprocess.check_output(cmd, shell = True)
-    CPU = getCPULoadRate()
+        # Shell scripts for system monitoring from here : https://unix.stackexchange.com/questions/119126/command-to-display-memory-usage-disk-usage-and-cpu-load
 
-    cmd = os.popen('vcgencmd measure_temp').readline()
-    CPU_TEMP = cmd.replace("temp=","Temp:").replace("'C\n","C")
+        # cmd = "top -bn1 | grep load | awk '{printf \"CPU:%.0f%%\", $(NF-2)*100}'"
+        # CPU = subprocess.check_output(cmd, shell = True)
+        CPU = getCPULoadRate()
 
-    cmd = "free -m | awk 'NR==2{printf \"RAM:%s/%s MB \", $2-$3,$2}'"
-    MemUsage = subprocess.check_output(cmd, shell = True )
+        cmd = os.popen('vcgencmd measure_temp').readline()
+        CPU_TEMP = cmd.replace("temp=","Temp:").replace("'C\n","C")
 
-    cmd = "df -h | awk '$NF==\"/\"{printf \"Disk:%d/%dMB\", ($2-$3)*1024,$2*1024}'"
-    Disk = subprocess.check_output(cmd, shell = True )
+        cmd = "free -m | awk 'NR==2{printf \"RAM:%s/%s MB \", $2-$3,$2}'"
+        MemUsage = subprocess.check_output(cmd, shell = True )
 
-    cmd = "hostname -I | cut -d\' \' -f1"
-    IP1 = subprocess.check_output(cmd, shell = True )
-    
-    cmd = "hostname -I | cut -d\' \' -f2"
-    IP2 = subprocess.check_output(cmd, shell = True )
+        cmd = "df -h | awk '$NF==\"/\"{printf \"Disk:%d/%dMB\", ($2-$3)*1024,$2*1024}'"
+        Disk = subprocess.check_output(cmd, shell = True )
 
-    # Write two lines of text.
+        cmd = "hostname -I | cut -d\' \' -f1"
+        IP1 = subprocess.check_output(cmd, shell = True )
 
-    draw.text((x, top), str(CPU), font=font, fill=255)
-    #draw.text((x+56, top), str(CPU_TEMP), font=font, fill=255)
-    draw.text((x, top+8), str(MemUsage)[2:-1],  font=font, fill=255)
-    #draw.text((x, top+16), str(Disk),  font=font, fill=255)
-    draw.text((x, top+16), str(IP1)[2:-3],  font=font, fill=255)
-    draw.text((x, top+24), str(IP2)[2:-3],  font=font, fill=255)
+        cmd = "hostname -I | cut -d\' \' -f2"
+        IP2 = subprocess.check_output(cmd, shell = True )
 
-    # Display image.
-    disp.image(image)
-    disp.display()
+        # Write two lines of text.
+
+        draw.text((x, top), str(CPU), font=font, fill=255)
+        #draw.text((x+56, top), str(CPU_TEMP), font=font, fill=255)
+        draw.text((x, top+8), str(MemUsage)[2:-1],  font=font, fill=255)
+        #draw.text((x, top+16), str(Disk),  font=font, fill=255)
+        draw.text((x, top+16), str(IP1)[2:-3],  font=font, fill=255)
+        draw.text((x, top+24), str(IP2)[2:-3],  font=font, fill=255)
+
+        # Display image.
+        disp.image(image)
+        disp.display()
+    except:
+        pass
+
     bus.write_byte_data(addr, fan_reg, 0x01)
     time.sleep(2)
